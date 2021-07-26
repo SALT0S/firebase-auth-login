@@ -27,9 +27,9 @@ const Login = props => {
 		setError(null);
 
 		if (registro) {
-			registrar();
-		} else {
 			Login();
+		} else {
+			registrar();
 		}
 	};
 
@@ -82,7 +82,7 @@ const Login = props => {
 	return (
 		<div className='mt-5'>
 			<h3 className='text-center'>
-				{registro ? 'Registro de usuarios' : 'Iniciar sesión'}
+				{!registro ? 'Registro de usuarios' : 'Iniciar sesión'}
 			</h3>
 			<hr />
 			<div className='row justify-content-center'>
@@ -111,7 +111,7 @@ const Login = props => {
 							className='btn btn-dark btn-lg w-100 shadow-none mb-2'
 							type='submit'
 						>
-							{registro ? 'Registrarte' : 'Iniciar sesión'}
+							{!registro ? 'Registrarte' : 'Iniciar sesión'}
 						</button>
 
 						<button
@@ -119,7 +119,7 @@ const Login = props => {
 							onClick={() => setRegistro(!registro)}
 							type='button'
 						>
-							{registro
+							{!registro
 								? '¿Ya tienes una cuenta?'
 								: '¿No tienes cuenta?'}
 						</button>
