@@ -127,6 +127,18 @@ const Login = props => {
 								? '¿Ya tienes una cuenta?'
 								: '¿No tienes cuenta?'}
 						</button>
+
+						{registro ? (
+							<div className='d-flex justify-content-center'>
+								<button
+									className='btn btn-link shadow-none mt-3 '
+									type='button'
+									onClick={() => props.history.push('/reset')}
+								>
+									Recuperar contraseña
+								</button>
+							</div>
+						) : null}
 					</form>
 				</div>
 			</div>

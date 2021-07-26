@@ -101,10 +101,7 @@ const Firestore = props => {
 								className='list-group-item d-flex justify-content-between'
 								key={item.id}
 							>
-								{item.name} -{' '}
-								{moment(item.fecha).format(
-									'MMMM Do YYYY, h:mm:ss a'
-								)}
+								{item.name} - {moment(item.fecha).format('ll')}
 								<div>
 									<button
 										className='btn btn-warning btn-sm me-2'
