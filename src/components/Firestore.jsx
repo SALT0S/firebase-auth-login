@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebase';
+import moment from 'moment';
+import 'moment/locale/es';
 
 const Firestore = props => {
 	const [tareas, setTareas] = useState([]);
@@ -99,7 +101,10 @@ const Firestore = props => {
 								className='list-group-item d-flex justify-content-between'
 								key={item.id}
 							>
-								{item.name}
+								{item.name} -{' '}
+								{moment(item.fecha).format(
+									'MMMM Do YYYY, h:mm:ss a'
+								)}
 								<div>
 									<button
 										className='btn btn-warning btn-sm me-2'
