@@ -6,25 +6,78 @@ import 'moment/locale/es';
 const Firestore = props => {
 	const [tareas, setTareas] = useState([]);
 	const [tarea, setTarea] = useState('');
+	const [fechaTarea, setFechaTarea] = useState('');
+	const [fechaHora, setFechaHora] = useState('');
 	const [edicion, setEdicion] = useState(false);
 	const [id, setId] = useState('');
 	const [error, setError] = useState(null);
+	const [ultimo, setUltimo] = React.useState(null);
+	const [desactivar, setDesactivar] = React.useState(false);
 
 	useEffect(() => {
 		const obtenerDatos = async () => {
 			try {
-				const data = await db.collection(props.user.uid).get();
+				setDesactivar(true);
+				const data = await db
+					.collection(props.user.uid)
+					.limit(5)
+					.orderBy('fecha', 'desc')
+					.get();
 				const arrayData = data.docs.map(doc => ({
 					id: doc.id,
 					...doc.data(),
 				}));
+				setUltimo(data.docs[data.docs.length - 1]);
+
 				setTareas(arrayData);
+
+				const query = await db
+					.collection(props.user.uid)
+					.limit(5)
+					.orderBy('fecha', 'desc')
+					.startAfter(data.docs[data.docs.length - 1])
+					.get();
+				if (query.empty) {
+					setDesactivar(true);
+				} else {
+					setDesactivar(false);
+				}
 			} catch (error) {
 				console.log(error);
 			}
 		};
 		obtenerDatos();
 	}, [props.user.uid]);
+
+	const siguiente = async e => {
+		try {
+			const data = await db
+				.collection(props.user.uid)
+				.limit(5)
+				.orderBy('fecha', 'desc')
+				.startAfter(ultimo)
+				.get();
+			const arrayData = data.docs.map(doc => ({
+				id: doc.id,
+				...doc.data(),
+			}));
+			setTareas([...tareas, ...arrayData]);
+			setUltimo(data.docs[data.docs.length - 1]);
+			const query = await db
+				.collection(props.user.uid)
+				.limit(5)
+				.orderBy('fecha', 'desc')
+				.startAfter(data.docs[data.docs.length - 1])
+				.get();
+			if (query.empty) {
+				setDesactivar(true);
+			} else {
+				setDesactivar(false);
+			}
+		} catch (error) {
+			console.log(error);
+		}
+	};
 
 	const agregar = async e => {
 		e.preventDefault();
@@ -101,8 +154,14 @@ const Firestore = props => {
 								className='list-group-item d-flex justify-content-between'
 								key={item.id}
 							>
-								{item.name} - {moment(item.fecha).format('ll')}
-								<div>
+								<div className='col-md-6 text-break'>
+									{item.name}
+								</div>
+								<div className='align-self-center'>
+									{moment(item.fecha).format('L')}
+								</div>
+
+								<div className='align-self-center'>
 									<button
 										className='btn btn-warning btn-sm me-2'
 										onClick={() => activarEdicion(item)}
@@ -111,7 +170,7 @@ const Firestore = props => {
 									</button>
 
 									<button
-										className='btn btn-danger btn-sm'
+										className='btn btn-danger btn-sm align-middle'
 										onClick={() => eliminar(item.id)}
 									>
 										Eliminar
@@ -120,6 +179,13 @@ const Firestore = props => {
 							</li>
 						))}
 					</ul>
+					<button
+						className='btn btn-info w-100 mt-2 btn-sm'
+						onClick={() => siguiente()}
+						disabled={desactivar}
+					>
+						Siguiente
+					</button>
 				</div>
 
 				<div className='col-md-6'>
@@ -135,6 +201,22 @@ const Firestore = props => {
 							onChange={e => setTarea(e.target.value)}
 							value={tarea}
 						/>
+
+						<div className='d-flex justify-content-between  mb-2'>
+							<input
+								type='date'
+								className='form-control me-4'
+								onChange={e => setFechaTarea(e.target.value)}
+								value={fechaTarea}
+							/>
+
+							<input
+								type='time'
+								className='form-control ms-4'
+								onChange={e => setFechaHora(e.target.value)}
+								value={fechaHora}
+							/>
+						</div>
 
 						{edicion ? (
 							<button
