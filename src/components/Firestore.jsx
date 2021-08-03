@@ -4,10 +4,12 @@ import moment from 'moment';
 import 'moment/locale/es';
 
 const Firestore = props => {
+	const [fechaDia, setFechaDia] = useState('');
+	const [fechaHora, setFechaHora] = useState('');
+
 	const [tareas, setTareas] = useState([]);
 	const [tarea, setTarea] = useState('');
-	const [fechaTarea, setFechaTarea] = useState('');
-	const [fechaHora, setFechaHora] = useState('');
+
 	const [edicion, setEdicion] = useState(false);
 	const [id, setId] = useState('');
 	const [error, setError] = useState(null);
@@ -20,7 +22,7 @@ const Firestore = props => {
 				setDesactivar(true);
 				const data = await db
 					.collection(props.user.uid)
-					.limit(5)
+					.limit(10)
 					.orderBy('fecha', 'desc')
 					.get();
 				const arrayData = data.docs.map(doc => ({
@@ -33,7 +35,7 @@ const Firestore = props => {
 
 				const query = await db
 					.collection(props.user.uid)
-					.limit(5)
+					.limit(10)
 					.orderBy('fecha', 'desc')
 					.startAfter(data.docs[data.docs.length - 1])
 					.get();
@@ -53,7 +55,7 @@ const Firestore = props => {
 		try {
 			const data = await db
 				.collection(props.user.uid)
-				.limit(5)
+				.limit(10)
 				.orderBy('fecha', 'desc')
 				.startAfter(ultimo)
 				.get();
@@ -65,7 +67,7 @@ const Firestore = props => {
 			setUltimo(data.docs[data.docs.length - 1]);
 			const query = await db
 				.collection(props.user.uid)
-				.limit(5)
+				.limit(10)
 				.orderBy('fecha', 'desc')
 				.startAfter(data.docs[data.docs.length - 1])
 				.get();
@@ -81,22 +83,39 @@ const Firestore = props => {
 
 	const agregar = async e => {
 		e.preventDefault();
-
-		if (!tarea.trim()) {
-			setError('Ingrese una tarea por favor...');
-			return;
-		}
-
 		try {
-			const nuevaTarea = {
-				name: tarea,
-				fecha: Date.now(),
-			};
+			if (!tarea.trim()) {
+				setError('Ingrese una tarea por favor...');
+				return;
+			}
+			if (!fechaDia.trim()) {
+				setError('Ingrese una fecha por favor...');
+				return;
+			}
 
-			const data = await db.collection(props.user.uid).add(nuevaTarea);
-			setTareas([...tareas, { ...nuevaTarea, id: data.id }]);
-			setTarea('');
-			setError(null);
+			if (!fechaHora.trim()) {
+				setError('Ingrese una hora por favor...');
+				return;
+			}
+
+			try {
+				const nuevaTarea = {
+					name: tarea,
+					fecha: fechaDia,
+					hora: fechaHora,
+				};
+
+				const data = await db
+					.collection(props.user.uid)
+					.add(nuevaTarea);
+				setTareas([...tareas, { ...nuevaTarea, id: data.id }]);
+				setTarea('');
+				setFechaDia('');
+				setFechaHora('');
+				setError(null);
+			} catch (error) {
+				console.log(error);
+			}
 		} catch (error) {
 			console.log(error);
 		}
@@ -115,6 +134,8 @@ const Firestore = props => {
 	const activarEdicion = item => {
 		setEdicion(true);
 		setTarea(item.name);
+		setFechaDia(item.fecha);
+		setFechaHora(item.hora);
 		setId(item.id);
 	};
 
@@ -126,18 +147,37 @@ const Firestore = props => {
 			return;
 		}
 
+		if (!fechaDia.trim()) {
+			setError('Ingrese una fecha por favor...');
+			return;
+		}
+
+		if (!fechaHora.trim()) {
+			setError('Ingrese una hora por favor...');
+			return;
+		}
+
 		try {
 			await db.collection(props.user.uid).doc(id).update({
 				name: tarea,
+				fecha: fechaDia,
+				hora: fechaHora,
 			});
 			const arrayEditado = tareas.map(item =>
 				item.id === id
-					? { id: item.id, fecha: item.fecha, name: tarea }
+					? {
+							id: item.id,
+							fecha: fechaDia,
+							hora: fechaHora,
+							name: tarea,
+					  }
 					: item
 			);
 			setTareas(arrayEditado);
 			setEdicion(false);
 			setTarea('');
+			setFechaDia('');
+			setFechaHora('');
 			setId('');
 		} catch (error) {
 			console.log(error);
@@ -158,7 +198,10 @@ const Firestore = props => {
 									{item.name}
 								</div>
 								<div className='align-self-center'>
-									{moment(item.fecha).format('L')}
+									{moment(
+										item.fecha + item.hora,
+										'YYYY-MM-DD, h:mm:ss a'
+									).fromNow()}
 								</div>
 
 								<div className='align-self-center'>
@@ -202,12 +245,12 @@ const Firestore = props => {
 							value={tarea}
 						/>
 
-						<div className='d-flex justify-content-between  mb-2'>
+						<div className='d-flex justify-content-between form-group mb-2'>
 							<input
 								type='date'
 								className='form-control me-4'
-								onChange={e => setFechaTarea(e.target.value)}
-								value={fechaTarea}
+								onChange={e => setFechaDia(e.target.value)}
+								value={fechaDia}
 							/>
 
 							<input
